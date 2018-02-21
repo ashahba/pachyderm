@@ -299,7 +299,7 @@ message PipelineInfo {
   string cache_size = 23;
   bool enable_stats = 24;
   string salt = 25;
-  string capability = 26;
+  string token = 26;
   bool batch = 27;
   string reason = 28;
   int64 max_queue_size = 29;

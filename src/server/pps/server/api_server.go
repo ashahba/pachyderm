@@ -1442,11 +1442,11 @@ func (a *apiServer) CreatePipeline(ctx context.Context, request *pps.CreatePipel
 	if err := a.authorizePipelineOp(ctx, operation, pipelineInfo.Input, pipelineInfo.Pipeline.Name); err != nil {
 		return nil, err
 	}
-	capabilityResp, err := pachClient.GetCapability(auth.In2Out(ctx), &auth.GetCapabilityRequest{})
+	tokenResp, err := pachClient.GetToken(auth.In2Out(ctx), &auth.GetTokenRequest{})
 	if err != nil {
 		return nil, fmt.Errorf("error getting capability for the user: %v", err)
 	}
-	pipelineInfo.Capability = capabilityResp.Capability // User is authorized -- grant capability token to pipeline
+	pipelineInfo.Token = tokenResp.Token // User is authorized -- pass delegation token to pipeline
 
 	pipelineName := pipelineInfo.Pipeline.Name
 
@@ -1478,9 +1478,9 @@ func (a *apiServer) CreatePipeline(ctx context.Context, request *pps.CreatePipel
 		}
 
 		// Revoke the old capability
-		if oldPipelineInfo.Capability != "" {
+		if oldPipelineInfo.Token != "" {
 			if _, err := pachClient.RevokeAuthToken(auth.In2Out(ctx), &auth.RevokeAuthTokenRequest{
-				Token: oldPipelineInfo.Capability,
+				Token: oldPipelineInfo.Token,
 			}); err != nil && !auth.IsNotActivatedError(err) {
 				return nil, fmt.Errorf("error revoking old capability: %v", err)
 			}
@@ -1753,9 +1753,9 @@ func (a *apiServer) deletePipeline(ctx context.Context, request *pps.DeletePipel
 		return nil, err
 	}
 	// Revoke the pipeline's capability
-	if pipelineInfo.Capability != "" {
+	if pipelineInfo.Token != "" {
 		if _, err := pachClient.RevokeAuthToken(auth.In2Out(ctx), &auth.RevokeAuthTokenRequest{
-			Token: pipelineInfo.Capability,
+			Token: pipelineInfo.Token,
 		}); err != nil && !auth.IsNotActivatedError(err) {
 			return nil, fmt.Errorf("error revoking old capability: %v", err)
 		}
